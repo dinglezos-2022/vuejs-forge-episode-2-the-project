@@ -1,5 +1,5 @@
-import { defineStore, acceptHMRUpdate } from "pinia";
-export const useProductStore = defineStore("ProductStore", {
+import { defineStore, acceptHMRUpdate } from 'pinia';
+export const useProductStore = defineStore('ProductStore', {
   state: () => {
     // const route = useRoute();
     return {
@@ -12,9 +12,9 @@ export const useProductStore = defineStore("ProductStore", {
        * Different ways of fetching the listing of products (filters, order, search)
        */
       filters: {
-        "fields.heatLevel": "",
-        order: "",
-        query: "",
+        'fields.heatLevel': '',
+        order: '',
+        query: '',
       },
 
       /**
@@ -34,14 +34,7 @@ export const useProductStore = defineStore("ProductStore", {
   },
   actions: {
     async fetchProducts() {
-      const contentful = require("contentful");
-      const client = contentful.createClient({
-        // This is the space ID. A space is like a project folder in Contentful terms
-        space: "ForgeEP2",
-        // This is the access token for this space. Normally you get both ID and the token in the Contentful web app
-        accessToken: "0b7f6x59a0"
-      });
-      const res = await $fetch("/api/products");
+      const res = await $fetch('/api/products');
       this.products = res;
       return this.products;
     },
