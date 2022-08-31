@@ -1,6 +1,23 @@
 <script setup>
+import { debouncedWatch, refDebounced } from '@vueuse/core';
+
+const { fetchProducts } = useProductStore();
+const router = useRouter();
 const productStore = useProductStore();
 const filters = computed(() => productStore.filters);
+const loading = ref(false);
+const loadingDebounced = refDebounced(loading, 500);
+
+debouncedWatch(
+  filters,
+  async () => {
+    loading.value = true;
+    router.push({ query: filters.value });
+    await fetchProducts();
+    loading.value = false;
+  },
+  { deep: true, debounce: 200 }
+);
 </script>
 <template>
   <div class="filters-wrapper flex gap-2 items-center">
