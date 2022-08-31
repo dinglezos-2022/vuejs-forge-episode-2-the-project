@@ -1,9 +1,9 @@
-import { useLocalStorage } from "@vueuse/core";
-import { useRouter } from "vue-router";
+import { useLocalStorage } from '@vueuse/core';
+import { useRouter } from 'vue-router';
 
 // user data persisted to local storage
-const tokenInLocalStorage = useLocalStorage("deskree_token", null);
-const userIdInLocalStorage = useLocalStorage("deskree_user_uid", null);
+const tokenInLocalStorage = useLocalStorage('deskree_token', null);
+const userIdInLocalStorage = useLocalStorage('deskree_user_uid', null);
 const loggedInUser = ref(null);
 const loggedInUserInit = ref(false);
 const onAuthStateChangeCallbacks = ref([]);
@@ -41,8 +41,8 @@ export function useDeskree() {
     },
     async signUp({ email, password }) {
       // hit signup endpoint on deskree
-      const res = await $fetch("/auth/accounts/signup", {
-        method: "POST",
+      const res = await $fetch('/auth/accounts/signup', {
+        method: 'POST',
         baseURL,
         body: { email, password },
       });
@@ -53,12 +53,12 @@ export function useDeskree() {
       initToken(user.idToken);
 
       // create the users one and only cart
-      const cart = await dbRestRequest("/carts", "POST", {
+      const cart = await dbRestRequest('/carts', 'POST', {
         products: JSON.stringify([]),
       });
 
       // connect that cart to the user
-      dbRestRequest(`/users/${user.uid}`, "PATCH", {
+      dbRestRequest(`/users/${user.uid}`, 'PATCH', {
         cartId: cart.data.uid,
       });
 
@@ -69,9 +69,9 @@ export function useDeskree() {
 
     async login({ email, password }) {
       // call login endpoint
-      const res = await $fetch("/auth/accounts/sign-in/email", {
+      const res = await $fetch('/auth/accounts/sign-in/email', {
         baseURL,
-        method: "POST",
+        method: 'POST',
         body: { email, password },
       });
 
@@ -109,18 +109,16 @@ export function useDeskree() {
       // persist user's cart data to Deskree here
 
       // example of what the return from Deskree will look like
-      return {
-        data: {
-          author: "4xsOPtHHiSMI06OHT5gvDnwmLuo2",
-          createdAt: "2022-08-19T06:24:47-05:00",
-          products: JSON.parse("[]"),
-          updatedAt: "2022-08-22T11:03:07-05:00",
-        },
-      };
+      return dbRestRequest(`/carts/${loggedInUser.value.cartId}`, 'PATCH', {
+        products: JSON.stringify(products),
+      });
     },
     async getCart() {
       // get the user's persisted cart from Deskree here
-      return [];
+      if (!loggedInUser.value || !tokenInLocalStorage.value) return;
+      const res = await dbRestRequest(`carts/${loggedInUser.value.cartId}`);
+      res.data.products = JSON.parse(res.data.products);
+      return res.data;
     },
   };
 
@@ -142,7 +140,7 @@ export function useDeskree() {
   }
 
   async function initUser(userIdOrUser) {
-    if (typeof userIdOrUser === "string") {
+    if (typeof userIdOrUser === 'string') {
       try {
         const res = await dbRestRequest(`/users/${userIdOrUser}`);
         res.data.cart = await user.getCart();
@@ -151,10 +149,10 @@ export function useDeskree() {
         if (!err.body) return;
         const tokenHasExpired = err.body.errors.find(
           (e) =>
-            e.code === "403" && e.detail.startsWith("Auth token has expired")
+            e.code === '403' && e.detail.startsWith('Auth token has expired')
         );
         if (tokenHasExpired) {
-          router.push("/logout");
+          router.push('/logout');
         }
       }
     } else {
@@ -162,18 +160,18 @@ export function useDeskree() {
     }
   }
 
-  function integrationsRestRequest(endpoint, method = "GET", body) {
-    endpoint = endpoint.replace(/^\//, "");
+  function integrationsRestRequest(endpoint, method = 'GET', body) {
+    endpoint = endpoint.replace(/^\//, '');
     return authorizedRestRequest(`/integrations/${endpoint}`, method, body);
   }
 
-  function dbRestRequest(endpoint, method = "GET", body) {
-    endpoint = endpoint.replace(/^\//, "");
+  function dbRestRequest(endpoint, method = 'GET', body) {
+    endpoint = endpoint.replace(/^\//, '');
     return authorizedRestRequest(`/rest/collections/${endpoint}`, method, body);
   }
 
-  function authorizedRestRequest(endpoint, method = "GET", body) {
-    endpoint = endpoint.replace(/^\//, "");
+  function authorizedRestRequest(endpoint, method = 'GET', body) {
+    endpoint = endpoint.replace(/^\//, '');
     const options = {
       baseURL,
       method,
@@ -181,7 +179,7 @@ export function useDeskree() {
         Authorization: `Bearer ${tokenInLocalStorage.value}`,
       },
     };
-    if (body && method !== "GET") options.body = body;
+    if (body && method !== 'GET') options.body = body;
     return $fetch(endpoint, options);
   }
 
